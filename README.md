@@ -41,7 +41,7 @@ The system operates as a distributed, microservice-based architecture:
 ### Setup Steps
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/yourusername/dsn-array-simulator.git](https://github.com/yourusername/dsn-array-simulator.git)
+   git clone https://github.com/mtepenner/dsn-array-simulator.git
    cd dsn-array-simulator
    ```
 2. Generate necessary protobufs and build the suite:
