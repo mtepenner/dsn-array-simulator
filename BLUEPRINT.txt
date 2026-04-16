@@ -1,0 +1,60 @@
+dsn-array-simulator/
+│
+├── .github/                             # Automated CI/CD pipelines
+│   └── workflows/
+│       ├── test-dsp-math.yml            # Unit tests for the phase-alignment algorithms
+│       └── build-services.yml
+│
+├── physics_environment/                 # Python: The Deep Space & Atmosphere Model
+│   ├── app/
+│   │   ├── ephemeris/
+│   │   │   └── skyfield_engine.py       # Calculates exact vectors between Earth stations and spacecraft
+│   │   ├── propagation/
+│   │   │   ├── path_loss.py             # Calculates Free-Space Path Loss (FSPL) over millions of miles
+│   │   │   ├── doppler_shift.py         # Shifts the frequency based on relative velocity
+│   │   │   └── atmosphere.py            # Adds random noise/attenuation based on Earth weather over each antenna
+│   │   ├── spacecraft/
+│   │   │   └── transmitter.py           # Generates the simulated source waveform (e.g., BPSK or QPSK modulation)
+│   │   └── main.py                      # gRPC server streaming the degraded signals to the antennas
+│   ├── requirements.txt                 # Includes numpy, scipy, skyfield
+│   └── Dockerfile
+│
+├── array_controller/                    # Go (or C++): The Beamforming & Phase Alignment Brain
+│   ├── cmd/
+│   │   └── correlator/
+│   │       └── main.go                  # High-performance engine ingesting data from all antennas
+│   ├── internal/
+│   │   ├── receivers/
+│   │   │   └── antenna_node.go          # Simulates an individual ground station receiving the noisy signal
+│   │   ├── dsp/
+│   │   │   ├── phase_locked_loop.go     # PLL algorithms to lock onto the carrier wave frequency
+│   │   │   ├── delay_calc.go            # Calculates the microsecond delay between different Earth stations
+│   │   │   └── beamformer.go            # The core logic: phase-shifting and summing the signals
+│   │   └── decoder/
+│   │       └── demodulator.go           # Translates the summed waveform back into digital telemetry bits
+│   ├── go.mod
+│   └── Dockerfile                       # CPU-optimized build for heavy math
+│
+├── mission_dashboard/                   # React + TypeScript: The DSN Operations Center
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ArrayMap3D.tsx           # 3D Earth showing the antennas rotating to track the target
+│   │   │   ├── SignalWaterfall.tsx      # Spectrogram showing the noisy signals vs. the clean combined signal
+│   │   │   ├── LinkBudgetTable.tsx      # Live metrics: Signal-to-Noise Ratio (SNR), Bit Error Rate (BER)
+│   │   │   └── ArrayControls.tsx        # UI to manually add/remove antennas from the array
+│   │   ├── hooks/
+│   │   │   └── useTelemetry.ts          # WebSockets pulling data from the Go controller
+│   │   ├── App.tsx
+│   │   └── index.tsx
+│   ├── package.json                     # Needs three.js, plotly.js (for waveforms)
+│   └── Dockerfile
+│
+├── infrastructure/                      # Deployment and orchestration
+│   ├── timescaledb.yaml                 # For storing historical signal-to-noise metrics
+│   ├── redis.yaml                       # High-speed message bus between the Python physics and Go correlator
+│   ├── array-controller.yaml
+│   └── physics-engine.yaml
+│
+├── docker-compose.yml                   # Boots the physics engine, array controller, and UI
+├── Makefile                             # Build scripts and protobuf generation
+└── README.md
