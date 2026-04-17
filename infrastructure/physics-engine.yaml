@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: physics-engine
+  labels:
+    app: physics-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: physics-engine
+  template:
+    metadata:
+      labels:
+        app: physics-engine
+    spec:
+      containers:
+        - name: physics-engine
+          image: dsn-physics-engine:latest
+          ports:
+            - containerPort: 50051
+          env:
+            - name: GRPC_PORT
+              value: "50051"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: physics-engine
+spec:
+  selector:
+    app: physics-engine
+  ports:
+    - port: 50051
+      targetPort: 50051
+  type: ClusterIP

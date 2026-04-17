@@ -61,7 +61,22 @@ Once the services are healthy:
 4. Monitor the **Signal Waterfall** to compare the noisy raw signals against the clean, combined beamformed signal.
 5. Check the **Link Budget Table** for real-time improvements in SNR and BER as more antennas are brought online.
 
-## 🤝 Contributing
+## � Testing
+Run all unit tests:
+```bash
+make test
+```
+
+Or run them individually:
+```bash
+# Python physics engine tests (45 tests)
+cd physics_environment && python -m pytest tests/ -v
+
+# Go DSP & decoder tests (29 tests)
+cd array_controller && go test ./... -v
+```
+
+## �🤝 Contributing
 Contributions are highly encouraged, especially in optimizing the DSP algorithms. Please ensure that any changes to the phase-alignment or PLL math pass the dedicated unit tests defined in `.github/workflows/test-dsp-math.yml`.
 
 1. Fork the Project

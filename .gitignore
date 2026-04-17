@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Go
+array_controller/array_controller
+*.exe
+
+# Node
+mission_dashboard/node_modules/
+mission_dashboard/build/
+
+# Proto generated
+*_pb2.py
+*_pb2_grpc.py
+*_pb2.pyi
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.log

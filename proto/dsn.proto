@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package dsn;
+
+option go_package = "dsn-array-simulator/array_controller/pkg/proto";
+
+// The Physics Environment streams degraded RF signals to the Array Controller
+service PhysicsEnvironment {
+  // Streams degraded signal samples for each antenna in the array
+  rpc StreamSignals (SignalRequest) returns (stream SignalChunk);
+}
+
+message SignalRequest {
+  string spacecraft_id = 1;
+  repeated string antenna_ids = 2;
+  double carrier_frequency_hz = 3;
+  double sample_rate_hz = 4;
+  int32 chunk_size = 5;
+}
+
+message SignalChunk {
+  string antenna_id = 1;
+  double timestamp = 2;
+  repeated double i_samples = 3;  // In-phase samples
+  repeated double q_samples = 4;  // Quadrature samples
+  double snr_db = 5;
+  double doppler_shift_hz = 6;
+  double path_loss_db = 7;
+  double atmosphere_attenuation_db = 8;
+  double distance_km = 9;
+}
+
+// The Array Controller exposes telemetry to the Dashboard via a simple RPC
+service ArrayController {
+  rpc GetTelemetry (TelemetryRequest) returns (TelemetryResponse);
+  rpc SetArrayConfig (ArrayConfig) returns (ArrayConfigResponse);
+}
+
+message TelemetryRequest {
+  string spacecraft_id = 1;
+}
+
+message TelemetryResponse {
+  double combined_snr_db = 1;
+  double bit_error_rate = 2;
+  repeated AntennaTelemetry antennas = 3;
+  repeated double combined_i_samples = 4;
+  repeated double combined_q_samples = 5;
+  double timestamp = 6;
+  bytes decoded_telemetry = 7;
+}
+
+message AntennaTelemetry {
+  string antenna_id = 1;
+  double snr_db = 2;
+  double phase_offset_rad = 3;
+  double delay_us = 4;
+  bool pll_locked = 5;
+  double latitude = 6;
+  double longitude = 7;
+  double azimuth_deg = 8;
+  double elevation_deg = 9;
+}
+
+message ArrayConfig {
+  repeated string active_antenna_ids = 1;
+}
+
+message ArrayConfigResponse {
+  bool success = 1;
+  string message = 2;
+}

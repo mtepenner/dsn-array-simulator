@@ -1,0 +1,52 @@
+name: Test DSP Math
+
+on:
+  push:
+    paths:
+      - 'array_controller/internal/dsp/**'
+      - 'physics_environment/app/propagation/**'
+      - 'physics_environment/app/spacecraft/**'
+      - '.github/workflows/test-dsp-math.yml'
+  pull_request:
+    paths:
+      - 'array_controller/internal/dsp/**'
+      - 'physics_environment/app/propagation/**'
+
+jobs:
+  test-go-dsp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run Go DSP tests
+        working-directory: array_controller
+        run: go test ./internal/dsp/... -v -race
+
+      - name: Run Go decoder tests
+        working-directory: array_controller
+        run: go test ./internal/decoder/... -v -race
+
+  test-python-physics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: physics_environment
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run Python physics tests
+        working-directory: physics_environment
+        run: python -m pytest tests/ -v

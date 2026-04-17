@@ -1,0 +1,67 @@
+name: Build Services
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-physics-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install and verify
+        working-directory: physics_environment
+        run: |
+          pip install -r requirements.txt
+          python -c "from app.ephemeris.skyfield_engine import DSN_STATIONS; print(f'Loaded {len(DSN_STATIONS)} stations')"
+          python -c "from app.spacecraft.transmitter import generate_spacecraft_signal; print('Transmitter OK')"
+
+      - name: Build Docker image
+        run: docker build -f physics_environment/Dockerfile -t dsn-physics-engine .
+
+  build-array-controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build
+        working-directory: array_controller
+        run: go build ./...
+
+      - name: Test
+        working-directory: array_controller
+        run: go test ./... -v
+
+      - name: Build Docker image
+        run: docker build -f array_controller/Dockerfile -t dsn-array-controller array_controller/
+
+  build-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: mission_dashboard
+        run: npm install
+
+      - name: Build
+        working-directory: mission_dashboard
+        run: npm run build

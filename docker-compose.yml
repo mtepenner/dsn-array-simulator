@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: dsn_metrics
+      POSTGRES_USER: dsn
+      POSTGRES_PASSWORD: dsn_secret_password
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dsn"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  physics-engine:
+    build:
+      context: .
+      dockerfile: physics_environment/Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      GRPC_PORT: "50051"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  array-controller:
+    build:
+      context: ./array_controller
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_URL: "redis:6379"
+      PHYSICS_GRPC_ADDR: "physics-engine:50051"
+      PORT: "8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      physics-engine:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mission-dashboard:
+    build:
+      context: ./mission_dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      array-controller:
+        condition: service_healthy
+
+volumes:
+  timescaledb_data:

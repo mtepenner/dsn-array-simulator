@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: array-controller
+  labels:
+    app: array-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: array-controller
+  template:
+    metadata:
+      labels:
+        app: array-controller
+    spec:
+      containers:
+        - name: array-controller
+          image: dsn-array-controller:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: REDIS_URL
+              value: "redis:6379"
+            - name: PHYSICS_GRPC_ADDR
+              value: "physics-engine:50051"
+            - name: PORT
+              value: "8080"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: array-controller
+spec:
+  selector:
+    app: array-controller
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
